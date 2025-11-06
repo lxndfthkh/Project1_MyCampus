@@ -6,8 +6,8 @@ import os
 
 router = APIRouter(prefix = "/folders", tags = ["folders"])
 #APIRouter: FastAPI에서 라우터 객체를 만들고 특정 기능을 묶는 클래스
-#prefix : "/folders" = router 안에 정의된 모든 엔드포인트 앞에는 "/folders"가 붙는다
-#tags : ["folders"] = swagger ui에서 API들이 folders라는 그룹으로 묶여서 표시됨
+#prefix = "/folders" : router 안에 정의된 모든 엔드포인트 앞에는 "/folders"가 붙는다
+#tags = ["folders"] : swagger ui에서 API들이 folders라는 그룹으로 묶여서 표시됨
 
 base = "uploads"
 #base = "uploads" : 폴더들이 저장될 기본 경로
