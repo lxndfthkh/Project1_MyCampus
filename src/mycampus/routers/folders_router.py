@@ -20,11 +20,14 @@ def create_folder(course : str = Query(..., description = "Name of the course (e
     #Course : str = Query(...) : 쿼리 파라미터로 Course 값을 받음
     #Week : str = Query(...) : 쿼리 파라미터로 Week 값을 받음
     #Learning_tool: str = Query(...) : 쿼리 파라미터로 Learning_tool 값을 받음
+
     path = os.path.join(base, course, week, learning_tool)
     #os.path.join : 여러 경로를 하나의 경로로 조합하는 함수
+
     os.makedirs(path, exist_ok=True)
     #os.makedirs : 지정된 경로에 디렉토리를 생성하는 함수
     #exist_ok=True : 이미 디렉토리가 존재해도 에러를 발생시키지 않음
+    
     return {"message": f"Folder created successfully."}
     #폴더 생성 성공 메시지 반환
 

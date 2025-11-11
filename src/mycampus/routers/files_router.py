@@ -28,14 +28,14 @@ def upload_file(file: UploadFile = File(...),
     #Week : str = Form(...) : HTML form 데이터에서 Week 값을 받음
     #Learning_tool : str = Form(...) : HTML form 데이터에서 Learning_tool 값을 받음
 
-    folder_path = os.path.join(base, course, week, learning_tool)
+    path = os.path.join(base, course, week, learning_tool)
     #os.path.join : 여러 경로를 하나의 경로로 조합하는 함수
 
-    if not os.path.exists(folder_path):
-        return {"message" : f"Folder '{folder_path}' does not exist."}
+    if not os.path.exists(path):
+        return {"message" : f"Folder '{path}' does not exist."}
     #os.path.exists : 지정된 경로가 존재하는지 확인하는 함수, 폴더가 없으면 저장하지 않음
 
-    save_path = os.path.join(folder_path, file.filename)
+    save_path = os.path.join(path, file.filename)
     #os.path.join : 여러 경로를 하나의 경로로 조합하는 함수, 파일이 실제로 저장되는 전체 경로 생성
 
     with open(save_path,"wb") as uploaded_file:
