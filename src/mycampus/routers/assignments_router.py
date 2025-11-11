@@ -49,15 +49,82 @@ def create_assignment(course : str = Query(..., description = "Name of the cours
     return {"message": f"Assignment saved to {file_path}"}
     #과제 저장 성공 메시지 반환
 
+#과제 읽기 함수
 def read_assignment(file_path: str):
     if not os.path.exists(file_path):
-        return {"message": f"File '{file_path}' does not exist."}
+        return {
+            "file" : file_path,
+            "assignments" : 0,
+            "specification" : [],
+            "message" : f"File '{file_path}' does not exist."
+        }
     
-    parts = []
+    specification = []
+
     with open (file_path, "r", encoding = "utf-8") as f:
-        content = f.read()
-        parts = content.splitlines()
-    return parts
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split("|")
+            if len(parts) == 2:
+                title, due_date = parts
+            else:
+                title, due_date = parts[0], "N/A"
+            specification.append({
+                "title" : title.strip(),
+                "due_date" : due_date.strip()
+            })
+    return {
+        "file" : file_path,
+        "assignments" : len(specification),
+        "specification" : specification
+    }
+
+#과제 목록 함수
+def list_assignments(course : str = Query(..., description = "Name of the course (ex: webpython)"),
+                     week : str | None = Query(None, description = "Week Number (ex: 01)")):
+    course_path = os.path.join(base, course)
+
+    if not os.path.exists(course_path):
+        return{
+            "course" : course,
+            "assignments" : [],
+            "specification" : f"course folder '{course_path}' does not exist."
+        }
+    
+    all_specification = []
+
+    if week:
+        file_path = os.path.join(course_path, week, "assignments.txt")
+        result = read_assignment(file_path)
+        return{
+            "course" : course,
+            "week" : week,
+            "assignments" : result["assignments"],
+            "specification" : result["specification"]
+        }
+    for dir_name in sorted(os.listdir(course_path)):
+        week_path = os.path.join(course_path, dir_name)
+        if not os.path.isdir(week_path):
+            continue
+        file_path = os.path.join(week_path, "assignments.txt")
+        if not os.path.exists(file_path):
+            continue
+    
+    result = read_assignment(file_path)
+
+    for assignment in result["specification"]:
+        all_specification.append({
+            "week" : dir_name,
+            "title" : assignment["title"],
+            "due_date" : assignment["due_date"]
+        })
+    return{
+    "course" : course,
+    "assignments" : len(all_specification),
+    "specification" : all_specification
+}
 
 
 #함수 등록
@@ -66,4 +133,11 @@ router.add_api_route(
     endpoint = create_assignment, #실행할 함수
     methods = ["GET"], #HTTP 메소드
     summary = "create assignment" #swagger ui에 표시될 이름
+)
+
+router.add_api_route(
+    path = "/list", #요청 주소
+    endpoint = list_assignments, #실행할 함수
+    methods = ["GET"], #HTTP 메소드
+    summary = "list assignments" #swagger ui에 표시될 이름
 )

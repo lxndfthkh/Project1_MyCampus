@@ -1,0 +1,60 @@
+testfile_lecture1_lecturenote1
+
+경로 베이스 통일
+현재 folders는 uploads/, files는 storage/를 씁니다 → 하나로 통일하세요(예: storage/).
+그리고 COURSE/WeekN/... 구조까지 바로 반영하면 이후 기능 확장이 쉬워요.
+
+엔드포인트 규격화
+
+프리픽스: /api/v1 도입 → /api/v1/folders, /api/v1/files
+
+메소드: 폴더 생성은 POST /folders(Body or Query 둘 중 하나만), 파일 업로드는 POST /files.
+
+코스/주차 인지 경로로 정리
+
+폴더: POST /folders?course=CS101&week=1 → storage/CS101/week01/ 생성
+
+파일: POST /files/upload (form: file, course, week) → storage/CS101/week01/<filename>
+
+응답 스키마(Pydantic) 추가
+
+CreateFolderResponse { message, path }
+
+UploadResponse { message, saved_path, size }
+→ Swagger 문서가 깔끔해지고, 클라이언트 연동 시 타입 안정성 ↑
+
+필수 패키지 확인
+
+파일 업로드용: python-multipart (이미 경고 보신 그거)
+
+.env로 BASE_DIR 같은 설정 주입(후에 배포/로컬 분리 용이)
+
+리턴 메시지 최소 표준화
+
+성공/실패 케이스를 통일된 형식으로(예: {"ok": true, ...} / {"ok": false, "error": "..."} )
+
+최소 기능 MVP 체크리스트 (이번 스프린트 완료 기준)
+
+ POST /api/v1/folders
+입력: course, week (혹은 path 한 방에) → 디렉터리 생성
+수락기준: Swagger에서 Try it out으로 storage/CS101/week01/가 실제 생성됨
+
+ POST /api/v1/files/upload
+입력: file(form), course, week → 해당 폴더에 저장
+수락기준: 존재하지 않으면 자동 생성(또는 “폴더 먼저 만들어주세요” 중 하나로 정책 고정) 후 저장 경로 반환
+
+ 공통 설정: BASE_DIR 1곳에서 관리, v1 프리픽스 적용, 응답 스키마 사용
+
+ 문서: /docs에서 위 2개 엔드포인트가 보이고 시연 가능
+
+그 다음 스텝(다음 스프린트 가이드)
+
+도메인 모델 초안: 사용자/강좌/자료/과제/제출 관계 정의 → DB 스키마(예: SQLModel+SQLite)로 1차 반영
+
+코스 인지 업로드: 업로드 시 course, week를 받아 DB에도 메타데이터 기록(검색/진도표시의 기반)
+
+진도/마감 알림의 토대: 마감일 필드 가진 Assignment 테이블만 만들어도, 마감 D-표시/간단 알림의 시작점
+
+외부 링크 필드: 강좌별 ecampus_url, team_link, drive_link 등을 한 테이블에 보관(허브 기능의 핵심)
+
+간단 권한: 로컬 개발은 API Key 하나로 시작(진짜 로그인은 나중)
