@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query
 #APIRouter : FastAPI에서 라우터 객체를 만들고 특정 기능을 묶는 클래스
 #Query : 쿼리 파라미터를 처리하기 위한 클래스
+from typing import Optional
 import os 
 # os : 운영체제와 상호작용하기 위한 모듈
 
@@ -133,7 +134,7 @@ def delete_assignment(course_name : str = Query(..., description = "Name of the 
     file_path = os.path.join(base,course_name, week, "assignments.txt")
 
     if not os.path.exists(file_path):
-        return {"message": f"Assignment file {file_path} not found."}
+        return {"message": f"Assignment file '{file_path}' not found."}
     
     lines = []
     deleted = False
@@ -152,9 +153,60 @@ def delete_assignment(course_name : str = Query(..., description = "Name of the 
     else:
         return {"message" :f"Assignment '{title}' not found in {file_path}"}
 
+def update_status(course_name : str = Query(..., description = "Name of the course (ex: webpython)"),
+                        week : str = Query(..., description = "Week Number (ex: 01)"),
+                        title : str = Query (..., description = "Assignment Title (ex: 'Assignment1')"),
+                        status : str = Query(..., description = "Current Status (ex: In progress, Completed)"),
+                        end_date : str = Query(..., description = "End Date (ex: 20251203)"),
+                        note :Optional[str] = Query (None, description = "")):
+    file_path = os.path.join(base, course_name, week, "assignments.txt")
+    if not os.path.exists(file_path):
+        return {"message": f"Assignment file '{file_path}' not found."}
+    
+    updated = False
+    lines = []
 
+    with open (file_path, "r", encoding = "utf-8") as f:
+        for line in f:
+            content = line.strip()
+            if not content:
+                continue
+            parts = [p.strip() for p in content.split("|")]
+            if len(parts) >= 2 and parts[0] == title:
+                old_title = parts[0]
+                old_due_date = parts[1]
+                while len(parts) < 5:
+                    parts.append("")
+                parts[2] = status
+                parts[3] = end_date
+                if note is not None:
+                    parts[4] = note
+                new_line = " | ".join([old_title, old_due_date,parts[2], parts[3], parts[4]]+'\n')
+                lines.append(new_line)
+                updated = True
+            else:
+                lines.append(line)
+    
+    if not updated:
+        return {"message": f"Assignment {title} not found in {file_path}."}
+    
+    with open(file_path, "w", encoding = "utf-8") as f:
+        f.writelines(lines)
+    return{
+        "message" : "Assignment status updated",
+        "course" : course_name,
+        "week" : week,
+        "title" : title,
+        "status": status,
+        "end_date" : end_date,
+        "note" : note,
+        "path" : file_path
+    }
+                
 
+                
 
+            
 #함수 등록
 router.add_api_route(
     path = "/create", #요청 주소
@@ -175,4 +227,11 @@ router.add_api_route(
     endpoint = delete_assignment, #실행할 함수
     methods = ["DELETE"], #HTTP 메소드
     summary = "delete assignment" #swagger ui에 표시될 이름
+)
+
+router.add_api_route(
+    path = "/status", #요청 주소
+    endpoint = update_status, #실행할 함수
+    methods = ["PUT"], #HTTP 메소드
+    summary = "Update assignment status" #swagger ui에 표시될 이름
 )
