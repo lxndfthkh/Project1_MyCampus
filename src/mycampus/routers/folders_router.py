@@ -3,6 +3,8 @@ from fastapi import APIRouter, Query
 #Query : 쿼리 파라미터를 처리하기 위한 클래스
 import os 
 # os : 운영체제와 상호작용하기 위한 모듈
+import shutil
+#shutil : 파일 삭제할 때 쓰이는 모듈
 
 router = APIRouter(prefix = "/folders", tags = ["folders"])
 #APIRouter: FastAPI에서 라우터 객체를 만들고 특정 기능을 묶는 클래스
@@ -31,10 +33,32 @@ def create_folder(course : str = Query(..., description = "Name of the course (e
     return {"message": f"Folder created successfully."}
     #폴더 생성 성공 메시지 반환
 
+#폴더 삭제 함수
+def delete_folder(course: str = Query(..., description = "Name of the course (ex: webpython)"),
+                  week : str = Query(..., description = "Week number (ex: 01)"),
+                  learning_tool : str = Query(..., description = "Lecturenote, Assignment, Project (ex: 'Lecturenote')")):
+    path = os.path.join(base, course, week, learning_tool)
+
+    if not os.path.exists(path):
+        return {"message" : f"Folder '{path}' does not exist."}
+    
+    shutil.rmtree(path)
+    #shutil.rmtree : 지정된 경로의 디렉토리와 그 안의 모든 파일 및 서브디렉토리를 삭제하는 함수
+
+    return {"message" : f"Folder '{path}' deleted successfully."}
+
+
 #함수 등록
 router.add_api_route(
     path = "/create", #요청 주소
     endpoint = create_folder, #실행할 함수
     methods = ["GET"], #HTTP 메소드
     summary = "create folder" #swagger ui에 표시될 이름
-    )   
+    )
+
+router.add_api_route(
+    path = "/delete", #요청 주소
+    endpoint = delete_folder, #실행할 함수
+    methods = ["DELETE"], #HTTP 메소드
+    summary = "delete folder" #swagger ui에 표시될 이름
+)

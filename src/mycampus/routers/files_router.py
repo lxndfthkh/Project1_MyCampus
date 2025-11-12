@@ -46,9 +46,30 @@ def upload_file(file: UploadFile = File(...),
     return {"message" : f"{file.filename} saved to {save_path}"}
     #파일 저장 성공 메시지 반환
 
+#파일 삭제 함수
+def delete_file(course : str = Form(...),
+                week : str = Form(...), 
+                learning_tool : str = Form(...),
+                filename : str = Form(...)):
+    path = os.path.join(base, course, week, learning_tool, filename)
+    if not os.path.exists(path):
+        return{"message" : f"File '{path}' does not exist."}
+    
+    os.remove(path)
+    #os.remove : 지정된 경로의 파일을 삭제하는 함수
+
+    return{"message" : f"File '{path}' deleted successfully."}
+
 router.add_api_route(
     path = "/upload", #요청 주소
     endpoint = upload_file, #실행할 함수
     methods = ["POST"], #HTTP 메소드
     summary = "upload file" #swagger ui에 표시될 이름
+)
+
+router.add_api_route(
+    path = "/delete", #요청 주소
+    endpoint = delete_file, #실행할 함수
+    methods = ["DELETE"], #HTTP 메소드
+    summary = "delete file" #swagger ui에 표시될 이름
 )

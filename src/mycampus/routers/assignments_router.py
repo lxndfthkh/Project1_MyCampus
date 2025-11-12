@@ -126,6 +126,34 @@ def list_assignments(course : str = Query(..., description = "Name of the course
     "specification" : all_specification
 }
 
+#과제 삭제 함수
+def delete_assignment(course : str = Query(..., description = "Name of the course (ex: webpython)"),
+                      week : str = Query(..., description = "Week Number (ex: 01)"),
+                      title : str = Query (..., description = "Assignment Title (ex: 'Assignment1')")):
+    file_path = os.path.join(base,course, week, "assignments.txt")
+
+    if not os.path.exists(file_path):
+        return {"message": f"Assignment file {file_path} not found."}
+    
+    lines = []
+    deleted = False
+
+    with open (file_path, "r", encoding = "utf-8") as f:
+        for line in f:
+            if  not line.strip().startswith(f"{title} |"):
+                lines.append(line)
+            else:
+                deleted = True
+    
+    with open(file_path, "w", encoding = "utf-8") as f:
+        f.writelines(lines)
+    if deleted:
+        return {"message": f"Assignment '{title}' deleted successfully."}
+    else:
+        return {"message" :f"Assignment '{title}' not found in {file_path}"}
+
+
+
 
 #함수 등록
 router.add_api_route(
@@ -140,4 +168,11 @@ router.add_api_route(
     endpoint = list_assignments, #실행할 함수
     methods = ["GET"], #HTTP 메소드
     summary = "list assignments" #swagger ui에 표시될 이름
+)
+
+router.add_api_route(
+    path = "/delete", #요청 주소
+    endpoint = delete_assignment, #실행할 함수
+    methods = ["DELETE"], #HTTP 메소드
+    summary = "delete assignment" #swagger ui에 표시될 이름
 )
