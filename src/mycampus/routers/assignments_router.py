@@ -14,15 +14,15 @@ base = "storage"
 
 #과제 클래스
 class Assignment:
-    def __init__(self, course: str, week: str, title: str, due_date: str):
-        self.course = course
+    def __init__(self, course_name: str, week: str, title: str, due_date: str):
+        self.course_name = course_name
         self.week = week
         self.title = title
         self.due_date = due_date
     
     def save(self):
 
-        folder_path = os.path.join(base, self.course, self.week)
+        folder_path = os.path.join(base, self.course_name, self.week)
         #os.path.join : 여러 경로를 하나의 경로로 조합하는 함수
 
         os.makedirs(folder_path, exist_ok=True)
@@ -36,7 +36,7 @@ class Assignment:
 
 
 #과제 만들기 함수
-def create_assignment(course : str = Query(..., description = "Name of the course (ex: webpython)"),
+def create_assignment(course_name : str = Query(..., description = "Name of the course (ex: webpython)"),
                       week : str = Query(..., description = "Week Number (ex: 01)"),
                       title : str = Query (..., description = "Assignment Title (ex: 'Assignment1')"),
                       due_date : str = Query (..., description = "Due Date (ex: 20251130)")):
@@ -44,7 +44,7 @@ def create_assignment(course : str = Query(..., description = "Name of the cours
     # Week : str = Query(...) : 쿼리 파라미터로 Week 값을 받음
     # Title : str = Query(...) : 쿼리 파라미터로 Title
     # Due_date : str = Query(...) : 쿼리 파라미터로 Due_date 값을 받음
-    assignment = Assignment(course, week, title, due_date)
+    assignment = Assignment(course_name, week, title, due_date)
     file_path = assignment.save()
     return {"message": f"Assignment saved to {file_path}"}
     #과제 저장 성공 메시지 반환
@@ -82,13 +82,13 @@ def read_assignment(file_path: str):
     }
 
 #과제 목록 함수
-def list_assignments(course : str = Query(..., description = "Name of the course (ex: webpython)"),
+def list_assignments(course_name : str = Query(..., description = "Name of the course (ex: webpython)"),
                      week : str | None = Query(None, description = "Week Number (ex: 01)")):
-    course_path = os.path.join(base, course)
+    course_path = os.path.join(base, course_name)
 
     if not os.path.exists(course_path):
         return{
-            "course" : course,
+            "course" : course_name,
             "assignments" : [],
             "specification" : f"course folder '{course_path}' does not exist."
         }
@@ -99,7 +99,7 @@ def list_assignments(course : str = Query(..., description = "Name of the course
         file_path = os.path.join(course_path, week, "assignments.txt")
         result = read_assignment(file_path)
         return{
-            "course" : course,
+            "course" : course_name,
             "week" : week,
             "assignments" : result["assignments"],
             "specification" : result["specification"]
@@ -112,25 +112,25 @@ def list_assignments(course : str = Query(..., description = "Name of the course
         if not os.path.exists(file_path):
             continue
     
-    result = read_assignment(file_path)
+        result = read_assignment(file_path)
 
-    for assignment in result["specification"]:
-        all_specification.append({
+        for assignment in result["specification"]:
+            all_specification.append({
             "week" : dir_name,
             "title" : assignment["title"],
             "due_date" : assignment["due_date"]
         })
     return{
-    "course" : course,
+    "course" : course_name,
     "assignments" : len(all_specification),
     "specification" : all_specification
 }
 
 #과제 삭제 함수
-def delete_assignment(course : str = Query(..., description = "Name of the course (ex: webpython)"),
+def delete_assignment(course_name : str = Query(..., description = "Name of the course (ex: webpython)"),
                       week : str = Query(..., description = "Week Number (ex: 01)"),
                       title : str = Query (..., description = "Assignment Title (ex: 'Assignment1')")):
-    file_path = os.path.join(base,course, week, "assignments.txt")
+    file_path = os.path.join(base,course_name, week, "assignments.txt")
 
     if not os.path.exists(file_path):
         return {"message": f"Assignment file {file_path} not found."}
@@ -159,7 +159,7 @@ def delete_assignment(course : str = Query(..., description = "Name of the cours
 router.add_api_route(
     path = "/create", #요청 주소
     endpoint = create_assignment, #실행할 함수
-    methods = ["GET"], #HTTP 메소드
+    methods = ["POST"], #HTTP 메소드
     summary = "create assignment" #swagger ui에 표시될 이름
 )
 

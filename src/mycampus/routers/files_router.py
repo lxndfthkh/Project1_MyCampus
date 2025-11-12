@@ -20,15 +20,15 @@ os.makedirs(base, exist_ok = True)
 
 #파일 업로드 함수
 def upload_file(file: UploadFile = File(...),
-                course : str = Form(...),
+                course_name : str = Form(...),
                 week : str = Form(...),
                 learning_tool : str = Form(...)):
     #file: UploadFile = File(...) : FastAPI에서 파일 업로드를 처리하기 위한 구문#
-    #Course : str = Form(...) : HTML form 데이터에서 Course 값을 받음
+    #Course_name : str = Form(...) : HTML form 데이터에서 Course_name 값을 받음
     #Week : str = Form(...) : HTML form 데이터에서 Week 값을 받음
     #Learning_tool : str = Form(...) : HTML form 데이터에서 Learning_tool 값을 받음
 
-    path = os.path.join(base, course, week, learning_tool)
+    path = os.path.join(base, course_name, week, learning_tool)
     #os.path.join : 여러 경로를 하나의 경로로 조합하는 함수
 
     if not os.path.exists(path):
@@ -47,11 +47,11 @@ def upload_file(file: UploadFile = File(...),
     #파일 저장 성공 메시지 반환
 
 #파일 삭제 함수
-def delete_file(course : str = Form(...),
+def delete_file(course_name : str = Form(...),
                 week : str = Form(...), 
                 learning_tool : str = Form(...),
                 filename : str = Form(...)):
-    path = os.path.join(base, course, week, learning_tool, filename)
+    path = os.path.join(base, course_name, week, learning_tool, filename)
     if not os.path.exists(path):
         return{"message" : f"File '{path}' does not exist."}
     
