@@ -153,6 +153,8 @@ def delete_assignment(course_name : str = Query(..., description = "Name of the 
     else:
         return {"message" :f"Assignment '{title}' not found in {file_path}"}
 
+
+#과제 상태 업데이트 함수
 def update_status(course_name : str = Query(..., description = "Name of the course (ex: webpython)"),
                         week : str = Query(..., description = "Week Number (ex: 01)"),
                         title : str = Query (..., description = "Assignment Title (ex: 'Assignment1')"),
@@ -181,7 +183,7 @@ def update_status(course_name : str = Query(..., description = "Name of the cour
                 parts[3] = end_date
                 if note is not None:
                     parts[4] = note
-                new_line = " | ".join([old_title, old_due_date,parts[2], parts[3], parts[4]]+'\n')
+                new_line = " | ".join([old_title, old_due_date,parts[2], parts[3], parts[4]])+'\n'
                 lines.append(new_line)
                 updated = True
             else:

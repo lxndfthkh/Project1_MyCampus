@@ -1,10 +1,11 @@
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Form, Query
 #APIRouter : FastAPI에서 라우터 객체를 만들고 특정 기능을 묶는 클래스
 #UploadFile : 업로드된 파일을 나타내는 클래스
 #File : 파일 업로드를 처리하기 위한 클래스
 #Form : HTML form 데이터를 처리하기 위한 클래스
 import os
 # os : 운영체제와 상호작용하기 위한 모듈
+from fastapi.responses import FileResponse
 
 router = APIRouter(prefix = "/files", tags = ["files"])
 #APIRouter: FastAPI에서 라우터 객체를 만들고 특정 기능을 묶는 클래스
@@ -60,6 +61,24 @@ def delete_file(course_name : str = Form(...),
 
     return{"message" : f"File '{path}' deleted successfully."}
 
+#파일 다운로드 함수
+def download_file(course_name: str = Query(..., description = "Name of the course (ex: webpython)"),
+                  week : str = Query(..., description = "Week number (ex: 01)"),
+                  learning_tool : str = Query(..., description = "Lecturenote, Assignment, Project (ex: 'Lecturenote')"),
+                  file_name : str = Query(..., description = "File name (ex: Lecturenote1.txt")):
+    path = os.path.join(base,course_name, week, learning_tool, file_name)
+
+    if not os.path.exists(path) or not os.path.isfile(path):
+        return{"message" : f"File '{path}' does not exist."}
+    return FileResponse(
+        path,
+        media_type = "application/octet-stream",
+        filename = file_name
+    )
+    
+
+
+
 router.add_api_route(
     path = "/upload", #요청 주소
     endpoint = upload_file, #실행할 함수
@@ -73,3 +92,10 @@ router.add_api_route(
     methods = ["DELETE"], #HTTP 메소드
     summary = "delete file" #swagger ui에 표시될 이름
 )
+
+router.add_api_route(
+    path = "/download", #요청 주소
+    endpoint = download_file,#실행할 함수
+    methods = ["GET"], #HTTP 메소드
+    summary = "download file" #swagger ui에 표시될 이름
+    )
