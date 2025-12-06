@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Query
+from typing import Optional
 import os 
 import shutil
 
@@ -43,20 +44,31 @@ def create_course(course_name : str = Query(..., description = "Name of the cour
     return {"message": "Course created successfully.",
             "path": created_path}
 
-#폴더 삭제 함수
-def delete_course(course_name: str = Query(..., description = "Name of the course (ex: webpython)"),
-                  week : str = Query(..., description = "Week number (ex: 01)"),
-                  learning_tool : str = Query(..., description = "Lecturenote, Assignment, Project (ex: 'Lecturenote')")):
-    
-    course = Course(course_name, week, learning_tool)
-    target_path = course.path
+
+def delete_folder(
+    course_name: str = Query(..., description="Name of the course (ex: webpython)"),
+    week: Optional[str] = Query(None, description="Week number (ex: 01)"),
+    learning_tool: Optional[str] = Query(None, description="Lecturenote, Assignment, Project (ex: 'Lecturenote')")
+):
+    if week is None:
+        target_path = os.path.join(base, course_name)
+    elif learning_tool is None:
+        target_path = os.path.join(base, course_name, week)
+    else:
+        course = Course(course_name, week, learning_tool)
+        target_path = course.path
 
     if not os.path.exists(target_path):
-        return {"message": f"Course path '{target_path}' does not exist."}
-    
-    deleted_path = course.delete()
+        return {"message": f"Path '{target_path}' does not exist."}
 
-    return {"message": "Course deleted successfully."}
+    shutil.rmtree(target_path)
+
+    return {
+        "message": "Delete succeeded.",
+        "deleted_path": target_path,
+    }
+
+
 
 
 #함수 등록
@@ -69,7 +81,7 @@ router.add_api_route(
 
 router.add_api_route(
     path = "/delete", #요청 주소
-    endpoint = delete_course, #실행할 함수
+    endpoint = delete_folder, #실행할 함수
     methods = ["DELETE"], #HTTP 메소드
-    summary = "delete course" #swagger ui에 표시될 이름
+    summary = "delete folder" #swagger ui에 표시될 이름
 )
